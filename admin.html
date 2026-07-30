@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrightWave Admin — Lead Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:      #1a237e;
+      --blue-mid:  #283593;
+      --blue-lt:   #3949ab;
+      --orange:    #ff6d00;
+      --white:     #ffffff;
+      --gray-50:   #f8fafc;
+      --gray-100:  #f1f5f9;
+      --gray-200:  #e2e8f0;
+      --gray-300:  #cbd5e1;
+      --gray-500:  #64748b;
+      --gray-700:  #334155;
+      --gray-900:  #0f172a;
+      --green:     #22c55e;
+      --red:       #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,.2);
+    }
+    .header-logo {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -.5px;
+    }
+    .header-logo span { color: var(--orange); }
+    .header-badge {
+      background: rgba(255,109,0,.2);
+      border: 1px solid rgba(255,109,0,.4);
+      color: #ffb74d;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .3rem .85rem;
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .header-back {
+      color: rgba(255,255,255,.7);
+      font-size: .875rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      transition: color .2s;
+    }
+    .header-back:hover { color: var(--white); }
+
+    /* ── Main ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      border: 1px solid var(--gray-200);
+    }
+    .stat-card-label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--gray-500);
+      margin-bottom: .5rem;
+    }
+    .stat-card-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--blue);
+      line-height: 1;
+    }
+    .stat-card-sub {
+      font-size: .78rem;
+      color: var(--gray-500);
+      margin-top: .35rem;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .toolbar h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .toolbar-actions {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .6rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: .875rem;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: var(--blue-lt); }
+    .btn-orange {
+      background: var(--orange);
+      color: var(--white);
+    }
+    .btn-orange:hover { background: #ff8f00; }
+    .btn-danger {
+      background: var(--red);
+      color: var(--white);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      color: var(--gray-700);
+    }
+    .btn-outline:hover { border-color: var(--blue-lt); color: var(--blue); }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 8px;
+      padding: .5rem .85rem;
+      font-family: inherit;
+      font-size: .875rem;
+      color: var(--gray-700);
+      background: var(--white);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .filter-bar input { min-width: 220px; }
+    .filter-bar input:focus,
+    .filter-bar select:focus { border-color: var(--blue-lt); }
+
+    /* ── Table wrapper ── */
+    .table-wrap {
+      background: var(--white);
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: var(--gray-50);
+      border-bottom: 2px solid var(--gray-200);
+    }
+    thead th {
+      text-align: left;
+      padding: .85rem 1.25rem;
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-500);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { color: var(--blue); }
+    thead th.sorted { color: var(--blue); }
+    thead th.sorted::after { content: ' ↓'; }
+    thead th.sorted.asc::after { content: ' ↑'; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--gray-50); }
+
+    td {
+      padding: .9rem 1.25rem;
+      font-size: .875rem;
+      color: var(--gray-700);
+      vertical-align: middle;
+    }
+    td:first-child { font-weight: 600; color: var(--gray-900); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: .2rem .65rem;
+      border-radius: 50px;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    .badge-seo      { background: rgba(26,35,126,.1);  color: var(--blue); }
+    .badge-social   { background: rgba(255,109,0,.1);  color: var(--orange); }
+    .badge-ads      { background: rgba(21,101,192,.1); color: #1565c0; }
+    .badge-other    { background: var(--gray-100);     color: var(--gray-700); }
+    .badge-form     { background: rgba(34,197,94,.1);  color: #16a34a; }
+    .badge-chatbot  { background: rgba(139,92,246,.1); color: #7c3aed; }
+
+    .ts { color: var(--gray-500); font-size: .8rem; white-space: nowrap; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--gray-700); margin-bottom: .5rem; }
+    .empty-state p  { font-size: .9rem; color: var(--gray-500); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--gray-100);
+      font-size: .85rem;
+      color: var(--gray-500);
+      flex-wrap: wrap;
+      gap: .75rem;
+    }
+    .page-btns { display: flex; gap: .4rem; }
+    .page-btn {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-700);
+      transition: all .2s;
+    }
+    .page-btn:hover { border-color: var(--blue-lt); color: var(--blue); }
+    .page-btn.active { background: var(--blue); border-color: var(--blue); color: var(--white); }
+    .page-btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(.9); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .modal h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: .5rem; }
+    .modal p { font-size: .9rem; color: var(--gray-500); margin-bottom: 1.5rem; line-height: 1.6; }
+    .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      background: var(--gray-900);
+      color: var(--white);
+      padding: .75rem 1.25rem;
+      border-radius: 10px;
+      font-size: .875rem;
+      font-weight: 500;
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive table ── */
+    @media (max-width: 700px) {
+      .table-wrap { overflow-x: auto; }
+      table { min-width: 640px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">Bright<span>Wave</span></div>
+  <span class="header-badge">🔒 Admin Dashboard</span>
+  <a href="index.html" class="header-back">← Back to Site</a>
+</header>
+
+<main>
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card">
+      <div class="stat-card-label">Total Leads</div>
+      <div class="stat-card-value" id="stat-total">0</div>
+      <div class="stat-card-sub">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Chatbot Leads</div>
+      <div class="stat-card-value" id="stat-chatbot">0</div>
+      <div class="stat-card-sub">Via Wava assistant</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Form Leads</div>
+      <div class="stat-card-value" id="stat-form">0</div>
+      <div class="stat-card-sub">Contact form</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Latest Lead</div>
+      <div class="stat-card-value" id="stat-latest" style="font-size:1rem;padding-top:.25rem;">—</div>
+      <div class="stat-card-sub">Most recent submission</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <h2>📋 Lead Submissions</h2>
+    <div class="toolbar-actions">
+      <button class="btn btn-orange" id="export-btn">⬇ Export CSV</button>
+      <button class="btn btn-outline" id="refresh-btn">🔄 Refresh</button>
+      <button class="btn btn-danger" id="clear-btn">🗑 Clear All</button>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input type="text" id="search-input" placeholder="🔍  Search by name, email…" />
+    <select id="source-filter">
+      <option value="">All Sources</option>
+      <option value="chatbot">Chatbot</option>
+      <option value="form">Form</option>
+    </select>
+    <select id="service-filter">
+      <option value="">All Services</option>
+      <option value="SEO">SEO</option>
+      <option value="Social">Social Media</option>
+      <option value="Paid">Paid Ads</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-col="name">#  Name</th>
+          <th data-col="email">Email</th>
+          <th data-col="service">Service</th>
+          <th data-col="budget">Budget</th>
+          <th data-col="source">Source</th>
+          <th data-col="timestamp">Submitted</th>
+        </tr>
+      </thead>
+      <tbody id="leads-tbody"></tbody>
+    </table>
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="empty-icon">📭</div>
+      <h3>No leads yet</h3>
+      <p>Leads collected via the chatbot or contact form will appear here automatically.</p>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <span id="pag-info"></span>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Clear Confirm Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Clear All Leads?</h3>
+    <p>This will permanently delete all <strong id="modal-count">0</strong> lead records from localStorage. This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+      <button class="btn btn-danger" id="modal-confirm">Yes, Delete All</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'brightwave_leads';
+  const PAGE_SIZE   = 15;
+
+  let allLeads      = [];
+  let filteredLeads = [];
+  let currentPage   = 1;
+  let sortCol       = 'timestamp';
+  let sortAsc       = false;
+
+  // ── Load from localStorage ───────────────────────────
+  function loadLeads() {
+    try {
+      allLeads = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch(e) {
+      allLeads = [];
+    }
+    applyFilters();
+    updateStats();
+  }
+
+  // ── Stats ─────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('stat-total').textContent   = allLeads.length;
+    document.getElementById('stat-chatbot').textContent = allLeads.filter(l => l.source === 'chatbot').length;
+    document.getElementById('stat-form').textContent    = allLeads.filter(l => l.source === 'form').length;
+    if (allLeads.length > 0) {
+      const latest = [...allLeads].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+      document.getElementById('stat-latest').textContent = latest.name || '—';
+    } else {
+      document.getElementById('stat-latest').textContent = '—';
+    }
+  }
+
+  // ── Filters ───────────────────────────────────────────
+  function applyFilters() {
+    const search  = document.getElementById('search-input').value.toLowerCase();
+    const source  = document.getElementById('source-filter').value;
+    const service = document.getElementById('service-filter').value.toLowerCase();
+
+    filteredLeads = allLeads.filter(l => {
+      const matchSearch = !search ||
+        (l.name  || '').toLowerCase().includes(search) ||
+        (l.email || '').toLowerCase().includes(search);
+      const matchSource  = !source  || (l.source  || '') === source;
+      const matchService = !service || (l.service || '').toLowerCase().includes(service);
+      return matchSearch && matchSource && matchService;
+    });
+
+    // sort
+    filteredLeads.sort((a, b) => {
+      let av = (a[sortCol] || '').toString().toLowerCase();
+      let bv = (b[sortCol] || '').toString().toLowerCase();
+      if (sortCol === 'timestamp') {
+        av = new Date(a.timestamp || 0).getTime();
+        bv = new Date(b.timestamp || 0).getTime();
+      }
+      if (av < bv) return sortAsc ? -1 :  1;
+      if (av > bv) return sortAsc ?  1 : -1;
+      return 0;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  // ── Render Table ──────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('leads-tbody');
+    const empty = document.getElementById('empty-state');
+    const pag   = document.getElementById('pagination');
+
+    tbody.innerHTML = '';
+
+    if (filteredLeads.length === 0) {
+      empty.style.display = 'block';
+      pag.style.display   = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filteredLeads.slice(start, start + PAGE_SIZE);
+
+    page.forEach((lead, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${start + idx + 1}. ${escHtml(lead.name || '—')}</td>
+        <td>${escHtml(lead.email || '—')}</td>
+        <td>${serviceBadge(lead.service)}</td>
+        <td>${escHtml(lead.budget || 'N/A')}</td>
+        <td>${sourceBadge(lead.source)}</td>
+        <td class="ts">${formatDate(lead.timestamp)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const pag     = document.getElementById('pagination');
+    const info    = document.getElementById('pag-info');
+    const btns    = document.getElementById('page-btns');
+    const total   = filteredLeads.length;
+    const pages   = Math.ceil(total / PAGE_SIZE);
+    const start   = (currentPage - 1) * PAGE_SIZE + 1;
+    const end     = Math.min(currentPage * PAGE_SIZE, total);
+
+    if (total <= PAGE_SIZE) { pag.style.display = 'none'; return; }
+    pag.style.display = 'flex';
+    info.textContent  = `Showing ${start}–${end} of ${total} leads`;
+
+    btns.innerHTML = '';
+    const prev = document.createElement('button');
+    prev.className = 'page-btn';
+    prev.textContent = '‹';
+    prev.disabled = currentPage === 1;
+    prev.addEventListener('click', () => { currentPage--; renderTable(); });
+    btns.appendChild(prev);
+
+    for (let i = 1; i <= pages; i++) {
+      const b = document.createElement('button');
+      b.className = 'page-btn' + (i === currentPage ? ' active' : '');
+      b.textContent = i;
+      b.addEventListener('click', () => { currentPage = i; renderTable(); });
+      btns.appendChild(b);
+    }
+
+    const next = document.createElement('button');
+    next.className = 'page-btn';
+    next.textContent = '›';
+    next.disabled = currentPage === pages;
+    next.addEventListener('click', () => { currentPage++; renderTable(); });
+    btns.appendChild(next);
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function serviceBadge(service) {
+    const s = (service || '').toLowerCase();
+    let cls = 'badge-other';
+    if (s.includes('seo'))    cls = 'badge-seo';
+    if (s.includes('social')) cls = 'badge-social';
+    if (s.includes('paid') || s.includes('ads')) cls = 'badge-ads';
+    return `<span class="badge ${cls}">${escHtml(service || 'N/A')}</span>`;
+  }
+
+  function sourceBadge(source) {
+    const cls = source === 'chatbot' ? 'badge-chatbot' : 'badge-form';
+    return `<span class="badge ${cls}">${source || 'unknown'}</span>`;
+  }
+
+  function formatDate(ts) {
+    if (!ts) return '—';
+    try {
+      const d = new Date(ts);
+      return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+           + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    } catch(e) { return ts; }
+  }
+
+  // ── Sort ──────────────────────────────────────────────
+  document.querySelectorAll('thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) { sortAsc = !sortAsc; th.classList.toggle('asc'); }
+      else {
+        document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted','asc'));
+        sortCol = col;
+        sortAsc = false;
+        th.classList.add('sorted');
+      }
+      applyFilters();
+    });
+  });
+
+  // ── Filters live ──────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('source-filter').addEventListener('change', applyFilters);
+  document.getElementById('service-filter').addEventListener('change', applyFilters);
+
+  // ── Export CSV ────────────────────────────────────────
+  document.getElementById('export-btn').addEventListener('click', () => {
+    if (filteredLeads.length === 0) { showToast('⚠️ No leads to export.'); return; }
+    const headers = ['#', 'Name', 'Email', 'Service', 'Budget', 'Source', 'Message', 'Timestamp'];
+    const rows = filteredLeads.map((l, i) => [
+      i + 1,
+      csvEscape(l.name || ''),
+      csvEscape(l.email || ''),
+      csvEscape(l.service || ''),
+      csvEscape(l.budget || ''),
+      csvEscape(l.source || ''),
+      csvEscape(l.message || ''),
+      csvEscape(l.timestamp || ''),
+    ].join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `brightwave-leads-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`✅ Exported ${filteredLeads.length} lead(s) to CSV.`);
+  });
+
+  function csvEscape(val) {
+    const str = String(val).replace(/"/g, '""');
+    return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
+  }
+
+  // ── Refresh ───────────────────────────────────────────
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    loadLeads();
+    showToast('🔄 Leads refreshed.');
+  });
+
+  // ── Clear All ─────────────────────────────────────────
+  const modal = document.getElementById('modal');
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    document.getElementById('modal-count').textContent = allLeads.length;
+    modal.classList.add('open');
+  });
+  document.getElementById('modal-cancel').addEventListener('click', () => modal.classList.remove('open'));
+  document.getElementById('modal-confirm').addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    modal.classList.remove('open');
+    loadLeads();
+    showToast('🗑 All leads cleared.');
+  });
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  // ── Toast ─────────────────────────────────────────────
+  function showToast(msg, duration = 3200) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  // ── Seed demo leads (only if empty) ──────────────────
+  function seedDemoLeads() {
+    if (localStorage.getItem(STORAGE_KEY)) return;
+    const demos = [
+      { name:'Alex Johnson', email:'alex@techstartup.io', service:'🔍 SEO', budget:'$5k – $15k', source:'chatbot', timestamp: new Date(Date.now()-86400000*2).toISOString() },
+      { name:'Maria Gonzalez', email:'mgonzalez@ecomstore.com', service:'📊 Paid Ads', budget:'$1k – $5k', source:'chatbot', timestamp: new Date(Date.now()-86400000).toISOString() },
+      { name:'David Chen', email:'d.chen@brandco.net', service:'📱 Social Media', budget:'$15k+', source:'form', message:'Looking for a full social media overhaul.', timestamp: new Date(Date.now()-3600000*5).toISOString() },
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(demos));
+  }
+
+  // ── Init ──────────────────────────────────────────────
+  seedDemoLeads();
+  loadLeads();
+</script>
+</body>
+</html>

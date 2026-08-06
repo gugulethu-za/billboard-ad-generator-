@@ -5,6 +5,26 @@ const UPLOAD_URL =
   "?uploadType=multipart&supportsAllDrives=true&fields=id,name,webViewLink";
 const MAX_PNG_BYTES = 12 * 1024 * 1024;
 
+class DriveUploadError extends Error {
+  constructor(stage, message, details = {}) {
+    super(message);
+    this.name = "DriveUploadError";
+    this.stage = stage;
+    this.details = details;
+  }
+}
+
+function logFailure(requestId, error, extra = {}) {
+  console.error("[save-to-drive] failed", {
+    requestId,
+    stage: error?.stage || "unexpected",
+    name: error?.name || "Error",
+    message: error?.message || String(error),
+    details: error?.details || undefined,
+    ...extra,
+  });
+}
+
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -68,31 +88,66 @@ async function getAccessToken(credentials) {
     exp: now + 3600,
   }));
   const unsignedJwt = `${encodedHeader}.${encodedClaim}`;
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    pemToArrayBuffer(credentials.private_key),
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    privateKey,
-    new TextEncoder().encode(unsignedJwt),
-  );
+  let privateKey;
+  try {
+    privateKey = await crypto.subtle.importKey(
+      "pkcs8",
+      pemToArrayBuffer(credentials.private_key),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+  } catch (error) {
+    throw new DriveUploadError("private-key", "The service-account private key could not be imported", {
+      cause: error?.message || String(error),
+      hasPemHeader: credentials.private_key.includes("BEGIN PRIVATE KEY"),
+      hasPemFooter: credentials.private_key.includes("END PRIVATE KEY"),
+    });
+  }
+  let signature;
+  try {
+    signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      privateKey,
+      new TextEncoder().encode(unsignedJwt),
+    );
+  } catch (error) {
+    throw new DriveUploadError("jwt-signing", "The service-account JWT could not be signed", {
+      cause: error?.message || String(error),
+    });
+  }
   const assertion = `${unsignedJwt}.${base64Url(signature)}`;
-  const response = await fetch(credentials.token_uri || TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-  });
-  const result = await response.json();
+  let response;
+  try {
+    response = await fetch(credentials.token_uri || TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
+    });
+  } catch (error) {
+    throw new DriveUploadError("auth-network", "Google OAuth request could not be sent", {
+      cause: error?.message || String(error),
+    });
+  }
+  const rawResult = await response.text();
+  let result;
+  try {
+    result = JSON.parse(rawResult);
+  } catch {
+    throw new DriveUploadError("auth-response", "Google OAuth returned non-JSON data", {
+      httpStatus: response.status,
+      responsePreview: rawResult.slice(0, 500),
+    });
+  }
   if (!response.ok || !result.access_token) {
-    console.error("Google OAuth token request failed", response.status, result.error);
-    throw new Error("Unable to authenticate with Google Drive");
+    throw new DriveUploadError("auth", "Google OAuth rejected the service-account credentials", {
+      httpStatus: response.status,
+      googleError: result.error,
+      googleErrorDescription: result.error_description,
+    });
   }
   return result.access_token;
 }
@@ -115,20 +170,64 @@ function multipartBody(metadata, pngBytes, boundary) {
 }
 
 export async function onRequestPost(context) {
+  const requestId = crypto.randomUUID();
   const rawCredentials = context.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   const folderId = String(context.env.GOOGLE_DRIVE_FOLDER_ID || "").trim();
   if (!rawCredentials || !folderId) {
-    return json({ ok: false, error: "Google Drive is not configured" }, 503);
+    const missing = [
+      !rawCredentials ? "GOOGLE_SERVICE_ACCOUNT_JSON" : null,
+      !folderId ? "GOOGLE_DRIVE_FOLDER_ID" : null,
+    ].filter(Boolean);
+    logFailure(requestId, new DriveUploadError(
+      "configuration",
+      `Missing Cloudflare binding(s): ${missing.join(", ")}`,
+    ));
+    return json({ ok: false, error: "Google Drive is not configured", requestId }, 503);
   }
 
   try {
-    const credentials = JSON.parse(rawCredentials);
-    if (!credentials.client_email || !credentials.private_key) {
-      throw new Error("Service account JSON is missing client_email or private_key");
+    let credentials;
+    try {
+      credentials = JSON.parse(rawCredentials);
+    } catch (error) {
+      throw new DriveUploadError("credentials-json", "GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON", {
+        cause: error?.message || String(error),
+        valueLength: String(rawCredentials).length,
+      });
     }
-    const payload = await context.request.json();
+    if (!credentials.client_email || !credentials.private_key) {
+      throw new DriveUploadError(
+        "credentials-fields",
+        "Service-account JSON is missing client_email or private_key",
+        {
+          hasClientEmail: Boolean(credentials.client_email),
+          hasPrivateKey: Boolean(credentials.private_key),
+          credentialType: credentials.type,
+        },
+      );
+    }
+    let payload;
+    try {
+      payload = await context.request.json();
+    } catch (error) {
+      throw new DriveUploadError("request-json", "Request body is not valid JSON", {
+        cause: error?.message || String(error),
+      });
+    }
     const filename = safeFilename(payload.filename);
-    const pngBytes = decodePng(payload.pngDataUrl);
+    let pngBytes;
+    try {
+      pngBytes = decodePng(payload.pngDataUrl);
+    } catch (error) {
+      throw new DriveUploadError("request-png", error.message);
+    }
+    console.log("[save-to-drive] starting", {
+      requestId,
+      filename,
+      pngBytes: pngBytes.byteLength,
+      folderIdSuffix: folderId.slice(-6),
+      serviceAccount: credentials.client_email,
+    });
     const accessToken = await getAccessToken(credentials);
     const boundary = `oomagent_billboard_${crypto.randomUUID()}`;
     const body = multipartBody(
@@ -136,25 +235,57 @@ export async function onRequestPost(context) {
       pngBytes,
       boundary,
     );
-    const response = await fetch(UPLOAD_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-      },
-      body,
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      console.error("Google Drive upload failed", response.status, result.error?.message);
-      return json({ ok: false, error: "Unable to save the billboard to Google Drive" }, 502);
+    let response;
+    try {
+      response = await fetch(UPLOAD_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": `multipart/related; boundary=${boundary}`,
+        },
+        body,
+      });
+    } catch (error) {
+      throw new DriveUploadError("upload-network", "Google Drive upload request could not be sent", {
+        cause: error?.message || String(error),
+      });
     }
-    return json({ ok: true, file: result });
+    const rawResult = await response.text();
+    let result;
+    try {
+      result = JSON.parse(rawResult);
+    } catch {
+      throw new DriveUploadError("upload-response", "Google Drive returned non-JSON data", {
+        httpStatus: response.status,
+        responsePreview: rawResult.slice(0, 1000),
+      });
+    }
+    if (!response.ok) {
+      throw new DriveUploadError("upload", "Google Drive rejected the file upload", {
+        httpStatus: response.status,
+        googleCode: result.error?.code,
+        googleStatus: result.error?.status,
+        googleMessage: result.error?.message,
+        googleReasons: result.error?.errors?.map((item) => item.reason),
+        folderIdSuffix: folderId.slice(-6),
+      });
+    }
+    console.log("[save-to-drive] success", {
+      requestId,
+      fileId: result.id,
+      filename: result.name,
+    });
+    return json({ ok: true, file: result, requestId });
   } catch (error) {
-    console.error("Save-to-Drive failed", error?.message || String(error));
-    const isInputError = /pngDataUrl|PNG is empty/.test(error?.message || "");
+    logFailure(requestId, error);
+    const isInputError = ["request-json", "request-png"].includes(error?.stage);
     return json(
-      { ok: false, error: isInputError ? error.message : "Unable to save the billboard to Google Drive" },
+      {
+        ok: false,
+        error: isInputError ? error.message : "Unable to save the billboard to Google Drive",
+        stage: error?.stage || "unexpected",
+        requestId,
+      },
       isInputError ? 400 : 500,
     );
   }

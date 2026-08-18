@@ -11,6 +11,7 @@ Production deployment details are in
 
 ```text
 ad-generator_5.preview.html   Source frontend copied into public/index.html
+ad-generator_5.mobile.html    Mobile frontend copied into public/mobile/index.html
 bee-hotel-billboard.jpg       Active billboard background
 oomagent-logo-white.svg       Primary site logo
 oomagent-logo-blue.png        Logo fallback
@@ -51,7 +52,9 @@ Prepare the generated Pages directory in PowerShell:
 
 ```powershell
 New-Item -ItemType Directory -Force public | Out-Null
+New-Item -ItemType Directory -Force public/mobile | Out-Null
 Copy-Item ad-generator_5.preview.html public/index.html
+Copy-Item ad-generator_5.mobile.html public/mobile/index.html
 Copy-Item bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg
 Copy-Item oomagent-logo-white.svg public/oomagent-logo-white.svg
 Copy-Item oomagent-logo-blue.png public/oomagent-logo-blue.png
@@ -63,8 +66,9 @@ Run Pages locally:
 npx wrangler pages dev public --compatibility-date=2026-08-06
 ```
 
-Open the local URL printed by Wrangler. Test copy generation, PNG rendering,
-automatic Drive saving after valid copy/email input, and manual submission.
+Open the local URL printed by Wrangler for desktop, and append `/mobile` for
+the dedicated mobile layout. Test copy generation, PNG rendering, automatic
+Drive saving after valid copy/email input, and manual submission on both paths.
 
 ## FastAPI diagnostic setup
 
@@ -102,7 +106,8 @@ Invoke-RestMethod `
 The FastAPI app is diagnostic rather than a complete replacement for Wrangler:
 
 - It does not implement `/api/save-to-drive`.
-- It returns the frontend HTML at `/`, but does not mount the frontend's image
+- It returns the desktop frontend at `/` and mobile frontend at `/mobile`, but
+  does not mount the frontend's image
   assets as static routes.
 - Use Wrangler when testing the complete browser workflow.
 

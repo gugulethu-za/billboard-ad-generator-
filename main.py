@@ -24,6 +24,7 @@ load_dotenv(BASE_DIR / ".env")
 
 logger = logging.getLogger("uvicorn.error")
 PREVIEW_FILE = BASE_DIR / "ad-generator_5.preview.html"
+MOBILE_FILE = BASE_DIR / "ad-generator_5.mobile.html"
 MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 MAX_WEBSITE_BYTES = 1_000_000
 MAX_WEBSITE_CHARS = 9_000
@@ -178,6 +179,14 @@ async def preview() -> FileResponse:
     if not PREVIEW_FILE.is_file():
         raise HTTPException(status_code=404, detail="Frontend preview not found")
     return FileResponse(PREVIEW_FILE)
+
+
+@app.get("/mobile", include_in_schema=False)
+@app.get("/mobile/", include_in_schema=False)
+async def mobile_preview() -> FileResponse:
+    if not MOBILE_FILE.is_file():
+        raise HTTPException(status_code=404, detail="Mobile frontend preview not found")
+    return FileResponse(MOBILE_FILE)
 
 
 @app.get("/health")

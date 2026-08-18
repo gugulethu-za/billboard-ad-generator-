@@ -1,8 +1,9 @@
 # Deploy as one Cloudflare Pages project
 
-The existing HTML remains unchanged. During each Pages build it is copied to
-`public/index.html`. The Function in `functions/api/generate-copy.js` is
-automatically routed to `POST /api/generate-copy`.
+The desktop HTML is copied to `public/index.html` and the dedicated mobile HTML
+is copied to `public/mobile/index.html`. The Function in
+`functions/api/generate-copy.js` is automatically routed to
+`POST /api/generate-copy`.
 
 ## 1. Put the project in GitHub
 
@@ -12,6 +13,7 @@ and push the production branch. Do not commit `.env`; it is ignored.
 At minimum, the repository must include:
 
 - `ad-generator_5.preview.html`
+- `ad-generator_5.mobile.html`
 - `bee-hotel-billboard.jpg`
 - `oomagent-logo-white.svg`
 - `oomagent-logo-blue.png`
@@ -33,7 +35,7 @@ published by Cloudflare.
 
    - **Framework preset:** None
    - **Build command:**
-     `mkdir -p public && cp ad-generator_5.preview.html public/index.html && cp oomagent-logo-white.svg public/oomagent-logo-white.svg && cp oomagent-logo-blue.png public/oomagent-logo-blue.png && cp bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg`
+     `mkdir -p public/mobile && cp ad-generator_5.preview.html public/index.html && cp ad-generator_5.mobile.html public/mobile/index.html && cp oomagent-logo-white.svg public/oomagent-logo-white.svg && cp oomagent-logo-blue.png public/oomagent-logo-blue.png && cp bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg`
    - **Build output directory:** `public`
    - **Root directory:** leave blank (repository root)
 
@@ -66,8 +68,9 @@ Drive credentials are likewise available only to the server-side Function.
 
 ## 4. Verify
 
-Open the generated `https://<project>.pages.dev/` URL. Enter a real domain and
-generate copy. The browser should call the same-origin endpoint:
+Open both `https://<project>.pages.dev/` and
+`https://<project>.pages.dev/mobile`. Enter a real domain and generate copy.
+Both frontends should call the same-origin endpoint:
 
 `POST https://<project>.pages.dev/api/generate-copy`
 

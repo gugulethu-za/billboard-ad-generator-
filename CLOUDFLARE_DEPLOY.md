@@ -29,7 +29,7 @@ published by Cloudflare.
 
    - **Framework preset:** None
    - **Build command:**
-     `mkdir -p public && cp ad-generator_5.preview.html public/index.html`
+     `mkdir -p public && cp ad-generator_5.preview.html public/index.html && cp oomagent-logo-white.svg public/oomagent-logo-white.svg && cp oomagent-logo-blue.png public/oomagent-logo-blue.png && cp bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg`
    - **Build output directory:** `public`
    - **Root directory:** leave blank (repository root)
 

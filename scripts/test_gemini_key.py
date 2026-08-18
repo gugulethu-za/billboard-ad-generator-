@@ -7,7 +7,7 @@ from google import genai
 
 
 def main() -> None:
-    env_file = Path(__file__).resolve().parent / ".env"
+    env_file = Path(__file__).resolve().parent.parent / ".env"
     load_dotenv(env_file)
 
     api_key = os.getenv("GOOGLE_DEVELOPER_API_KEY")

@@ -12,7 +12,11 @@ and push the production branch. Do not commit `.env`; it is ignored.
 At minimum, the repository must include:
 
 - `ad-generator_5.preview.html`
+- `bee-hotel-billboard.jpg`
+- `oomagent-logo-white.svg`
+- `oomagent-logo-blue.png`
 - `functions/api/generate-copy.js`
+- `functions/api/save-to-drive.js`
 - `.gitignore`
 
 The Python files may remain for local/reference use. They are not used or
@@ -37,7 +41,7 @@ published by Cloudflare.
 
 The `functions` directory must stay at repository root, not inside `public`.
 
-## 3. Add the Gemini key
+## 3. Add the required secrets and variables
 
 After the project exists:
 
@@ -45,15 +49,20 @@ After the project exists:
 2. Go to **Settings** > **Variables and Secrets**.
 3. Select **Add**.
 4. Choose an encrypted **Secret** when the dashboard offers the choice.
-5. Enter the name `GOOGLE_DEVELOPER_API_KEY`.
-6. Paste the Gemini API key as its value and save it.
-7. Add it to both **Production** and **Preview** if branch-preview deployments
+5. Add these values:
+   - `GOOGLE_DEVELOPER_API_KEY`: encrypted Gemini API key.
+   - `GOOGLE_SERVICE_ACCOUNT_JSON`: encrypted complete Google service-account
+     JSON used by the Drive upload Function.
+   - `GOOGLE_DRIVE_FOLDER_ID`: ID of the target Google Drive folder. Share that
+     folder with the service account's email address.
+6. Add them to both **Production** and **Preview** if branch-preview deployments
    should also generate copy.
-8. Trigger a new deployment from **Deployments** > **Retry deployment**, or
+7. Trigger a new deployment from **Deployments** > **Retry deployment**, or
    push another commit.
 
 The key is available only to the Function as
 `context.env.GOOGLE_DEVELOPER_API_KEY`; it is never built into the HTML.
+Drive credentials are likewise available only to the server-side Function.
 
 ## 4. Verify
 

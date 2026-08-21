@@ -15,6 +15,7 @@ At minimum, the repository must include:
 - `ad-generator_5.preview.html`
 - `ad-generator_5.mobile.html`
 - `bee-hotel-billboard.jpg`
+- `bee-hotel-billboard-v2.jpg`
 - `oomagent-logo-white.svg`
 - `oomagent-logo-blue.png`
 - `functions/api/generate-copy.js`
@@ -35,7 +36,7 @@ published by Cloudflare.
 
    - **Framework preset:** None
    - **Build command:**
-     `mkdir -p public/mobile && cp ad-generator_5.preview.html public/index.html && cp ad-generator_5.mobile.html public/mobile/index.html && cp oomagent-logo-white.svg public/oomagent-logo-white.svg && cp oomagent-logo-blue.png public/oomagent-logo-blue.png && cp bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg`
+     `mkdir -p public/mobile && cp ad-generator_5.preview.html public/index.html && cp ad-generator_5.mobile.html public/mobile/index.html && cp oomagent-logo-white.svg public/oomagent-logo-white.svg && cp oomagent-logo-blue.png public/oomagent-logo-blue.png && cp bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg && cp bee-hotel-billboard-v2.jpg public/bee-hotel-billboard-v2.jpg`
    - **Build output directory:** `public`
    - **Root directory:** leave blank (repository root)
 

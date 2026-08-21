@@ -13,6 +13,7 @@ Production deployment details are in
 ad-generator_5.preview.html   Source frontend copied into public/index.html
 ad-generator_5.mobile.html    Mobile frontend copied into public/mobile/index.html
 bee-hotel-billboard.jpg       Active billboard background
+bee-hotel-billboard-v2.jpg    Cropped desktop billboard photograph
 oomagent-logo-white.svg       Primary site logo
 oomagent-logo-blue.png        Logo fallback
 functions/api/                Production Cloudflare API Functions
@@ -56,6 +57,7 @@ New-Item -ItemType Directory -Force public/mobile | Out-Null
 Copy-Item ad-generator_5.preview.html public/index.html
 Copy-Item ad-generator_5.mobile.html public/mobile/index.html
 Copy-Item bee-hotel-billboard.jpg public/bee-hotel-billboard.jpg
+Copy-Item bee-hotel-billboard-v2.jpg public/bee-hotel-billboard-v2.jpg
 Copy-Item oomagent-logo-white.svg public/oomagent-logo-white.svg
 Copy-Item oomagent-logo-blue.png public/oomagent-logo-blue.png
 ```

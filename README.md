@@ -56,9 +56,10 @@ Never commit `.dev.vars`; it is ignored.
 
 The Browser Run token needs **Account > Browser Rendering > Edit** permission,
 restricted to the Cloudflare account identified by `CLOUDFLARE_ACCOUNT_ID`.
-The website screenshot is requested alongside copy generation and is used as
-the initial 720×576 cover-cropped ad background. Screenshot failures time out
-and fall back silently without preventing copy generation.
+The website screenshot is requested alongside copy generation and analyzed
+client-side to choose a prominent, saturated brand color for the billboard's
+solid background. Neutral white, black, and gray pixels are ignored. Screenshot
+or color-analysis failures fall back silently without preventing copy generation.
 
 Prepare the generated Pages directory in PowerShell:
 

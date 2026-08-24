@@ -32,8 +32,6 @@ public/                       Generated Pages output; ignored by Git
   the 720x576 creative background layer. The roadside photograph, copy, domain,
   and logo are never sent to Gemini and remain deterministic browser layers.
 - `POST /api/save-to-drive` stores the generated PNG in Google Drive.
-- `POST /api/delete-billboard` deletes a saved billboard by Drive file ID after
-  verifying that the file belongs to `GOOGLE_DRIVE_FOLDER_ID`.
 
 Website retrieval has a 15-second network timeout and a 16-second outer limit
 in the Python implementation. If retrieval fails, copy generation continues
@@ -61,11 +59,6 @@ restricted to the Cloudflare account identified by `CLOUDFLARE_ACCOUNT_ID`.
 The website screenshot is requested alongside copy generation and is used as
 the initial 720×576 cover-cropped ad background. Screenshot failures time out
 and fall back silently without preventing copy generation.
-
-For billboard deletion, the service account must be a **Manager** (`organizer`)
-on the Shared Drive containing `GOOGLE_DRIVE_FOLDER_ID`. Contributor and Content
-Manager access can upload files but cannot permanently delete them. The delete
-endpoint checks Drive's `capabilities.canDelete` before attempting deletion.
 
 Prepare the generated Pages directory in PowerShell:
 
@@ -149,7 +142,6 @@ Before deployment:
 node --check functions/api/generate-copy.js
 node --check functions/api/generate-background.js
 node --check functions/api/save-to-drive.js
-node --check functions/api/delete-billboard.js
 python -c "import ast, pathlib; ast.parse(pathlib.Path('main.py').read_text(encoding='utf-8'))"
 ```
 

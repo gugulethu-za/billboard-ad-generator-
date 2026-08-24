@@ -28,6 +28,9 @@ public/                       Generated Pages output; ignored by Git
 
 - `POST /api/generate-copy` fetches the submitted public website, extracts
   readable text, and supplies that content to Gemini.
+- `POST /api/generate-background` uses Gemini 2.5 Flash Image to create only
+  the 720x576 creative background layer. The roadside photograph, copy, domain,
+  and logo are never sent to Gemini and remain deterministic browser layers.
 - `POST /api/save-to-drive` stores the generated PNG in Google Drive.
 
 Website retrieval has a 15-second network timeout and a 16-second outer limit
@@ -129,6 +132,7 @@ Before deployment:
 
 ```powershell
 node --check functions/api/generate-copy.js
+node --check functions/api/generate-background.js
 node --check functions/api/save-to-drive.js
 python -c "import ast, pathlib; ast.parse(pathlib.Path('main.py').read_text(encoding='utf-8'))"
 ```

@@ -49,6 +49,7 @@ export async function onRequestPost(context) {
     "Create a premium, high-impact advertising background for a Dutch roadside billboard creative.",
     `Art direction: ${prompt}`,
     "Generate background artwork only: no words, letters, numbers, logos, signs, frames, billboards, mockups or watermarks.",
+    "Artwork must extend fully to every edge: no white borders, empty bands, margins, padding or transparent areas.",
     "Keep the composition bold and uncluttered with useful negative space for large overlaid copy.",
     "The application will center-crop the result to 5:4 (720 by 576 pixels), so keep important details near the center and away from the outer edges.",
   ].join("\n");

@@ -57,7 +57,9 @@ After the project exists:
    - `GOOGLE_SERVICE_ACCOUNT_JSON`: encrypted complete Google service-account
      JSON used by the Drive upload Function.
    - `GOOGLE_DRIVE_FOLDER_ID`: ID of the target Google Drive folder. Share that
-     folder with the service account's email address.
+     folder with the service account's email address. For permanent billboard
+     deletion in a Shared Drive, give the service account the **Manager** role;
+     lower roles can upload but do not have `capabilities.canDelete`.
 6. Add them to both **Production** and **Preview** if branch-preview deployments
    should also generate copy.
 7. Trigger a new deployment from **Deployments** > **Retry deployment**, or

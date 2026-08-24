@@ -102,11 +102,11 @@ const renderWithoutAutoSave=render;render=()=>{renderWithoutAutoSave();scheduleA
 <style id="mobile-layout">
 .mobileSwitch{display:none!important}
 .app{display:block!important;width:100%;max-width:640px;margin:0 auto;padding:16px 14px 36px!important}
-.top{align-items:flex-start;gap:14px;margin:0 0 14px;padding:0 0 14px;border-bottom:1px solid rgba(255,255,255,.65)}
-.titleBlock{gap:7px;min-width:0}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;row-gap:12px;margin:0 0 22px;padding:0 0 18px;border-bottom:1px solid rgba(255,255,255,.65)}
+.titleBlock{display:contents}
 .top h1{font-size:clamp(42px,14vw,68px);line-height:.86}
-.intro{font-size:clamp(16px,4.7vw,21px);line-height:1.16}
-.topActions{margin-left:auto;align-self:flex-start}
+.intro{grid-column:1/-1;max-width:32ch;margin:0;font-size:clamp(15px,4.4vw,20px);line-height:1.28;white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none}
+.topActions{grid-column:2;grid-row:1;margin-left:auto;align-self:start}
 .logo{width:min(23vw,96px)!important;height:auto;max-width:none}
 .panel{display:flex!important;flex-direction:column;gap:10px;padding:0!important}
 .panel:after{display:none}

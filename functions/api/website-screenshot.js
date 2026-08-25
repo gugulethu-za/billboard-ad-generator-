@@ -40,6 +40,10 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
@@ -55,14 +59,31 @@ export async function onRequestPost(context) {
     return jsonResponse({ ok: false, error: error.message || 'Ongeldige aanvraag.' }, 400);
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  const timeout = setTimeout(() => controller.abort(), 45000);
   try {
-    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/browser-rendering/screenshot`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: websiteUrl, viewport: { width: 1280, height: 1024 }, screenshotOptions: { type: 'png', fullPage: false }, gotoOptions: { waitUntil: 'networkidle0', timeout: 15000 } }),
-      signal: controller.signal,
-    });
+    let response;
+    const fallbackRetryDelays = [1000, 2000];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/browser-rendering/screenshot`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: websiteUrl, viewport: { width: 1280, height: 1024 }, screenshotOptions: { type: 'png', fullPage: false }, gotoOptions: { waitUntil: 'networkidle0', timeout: 15000 } }),
+        signal: controller.signal,
+      });
+      if (response.status !== 429 || attempt === 2) break;
+      const retryAfterSeconds = Number(response.headers.get('retry-after'));
+      const retryInMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+        ? Math.min(retryAfterSeconds * 1000, 5000)
+        : fallbackRetryDelays[attempt];
+      console.warn('[website-screenshot] rate limited; retrying', {
+        attempt: attempt + 1,
+        retryAfterHeader: response.headers.get('retry-after'),
+        retryInMs,
+        websiteUrl,
+      });
+      await response.arrayBuffer().catch(() => null);
+      await delay(retryInMs);
+    }
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
       console.warn('Browser Run screenshot failed', response.status, detail.slice(0, 500));

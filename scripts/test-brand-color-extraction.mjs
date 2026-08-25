@@ -1,3 +1,4 @@
+
 import fs from 'node:fs';
 
 const html = fs.readFileSync('ad-generator_5.preview.html', 'utf8');

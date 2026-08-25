@@ -59,7 +59,8 @@ restricted to the Cloudflare account identified by `CLOUDFLARE_ACCOUNT_ID`.
 The website screenshot is requested alongside copy generation and analyzed
 client-side to choose a prominent, saturated brand color for the billboard's
 solid background. Neutral white, black, and gray pixels are ignored. Screenshot
-or color-analysis failures fall back silently without preventing copy generation.
+or color-analysis failures fall back silently to neutral grey (`#9CA3AF`)
+without preventing copy generation.
 
 Prepare the generated Pages directory in PowerShell:
 

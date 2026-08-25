@@ -46,11 +46,13 @@ export async function onRequestPost(context) {
   // Gemini creates only the ad's background bitmap. The roadside photograph,
   // headline, domain and logo remain deterministic client-side layers.
   const imagePrompt = [
-    "Create a premium, high-impact advertising background for a Dutch roadside billboard creative.",
-    `Art direction: ${prompt}`,
+    "Create a premium abstract graphic-design background for a Dutch roadside billboard.",
+    `Interpret this theme abstractly through shapes, color, texture and composition; do not depict it as a literal or realistic photograph: ${prompt}`,
+    "Use low-to-moderate contrast and a balanced tonal range. Avoid extreme brightness, deep darkness, harsh transitions and competing focal points so overlaid typography stays clearly readable.",
+    "Design this specifically as supporting background artwork behind large billboard text, not as a busy, highly detailed standalone image.",
     "Generate background artwork only: no words, letters, numbers, logos, signs, frames, billboards, mockups or watermarks.",
     "Artwork must extend fully to every edge: no white borders, empty bands, margins, padding or transparent areas.",
-    "Keep the composition bold and uncluttered with useful negative space for large overlaid copy.",
+    "Keep the composition simple and uncluttered with useful negative space for large overlaid copy.",
     "The application will center-crop the result to 5:4 (720 by 576 pixels), so keep important details near the center and away from the outer edges.",
   ].join("\n");
 

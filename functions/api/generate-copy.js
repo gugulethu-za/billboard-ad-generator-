@@ -194,6 +194,9 @@ Schrijf precies twee krachtige Nederlandse reclameregels.
 Doe alsof je een award-winning copywriter bent. Maak out-of-the-box zinnen die
 een duidelijke relatie hebben met het merk, maar niet gewoon of generiek zijn.
 Geef mensen een kleine glimlach en inspireer ze terwijl ze de regels lezen.
+Blijf daarbij concreet en helder: een lezer moet binnen één of twee seconden
+begrijpen wat de tekst betekent. Vermijd abstracte of vage formuleringen die
+niet logisch aansluiten op de daadwerkelijk opgehaalde website-inhoud.
 Vereisten:
 - Elke regel is maximaal 45 tekens inclusief spaties.
 - De regels moeten samen als één korte advertentie werken.

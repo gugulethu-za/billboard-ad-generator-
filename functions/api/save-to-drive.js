@@ -3,7 +3,9 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const UPLOAD_URL =
   "https://www.googleapis.com/upload/drive/v3/files" +
   "?uploadType=multipart&supportsAllDrives=true&fields=id,name,webViewLink";
+const SHEETS_API_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 const MAX_PNG_BYTES = 12 * 1024 * 1024;
+const SHEET_APPEND_ATTEMPTS = 3;
 
 class DriveUploadError extends Error {
   constructor(stage, message, details = {}) {
@@ -75,6 +77,86 @@ function safeFilename(value) {
     .slice(0, 180);
   const filename = cleaned || `billboard-${Date.now()}.png`;
   return filename.toLowerCase().endsWith(".png") ? filename : `${filename}.png`;
+}
+
+function cleanContactValue(value, maxLength) {
+  return String(value || "")
+    .replace(/\u0000/g, "")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function contactFromPayload(payload) {
+  const contact = payload?.contact || {};
+  return {
+    name: cleanContactValue(contact.name, 200),
+    company: cleanContactValue(contact.company, 200),
+    email: cleanContactValue(contact.email, 254),
+    phone: cleanContactValue(contact.phone, 100),
+  };
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function appendContactRow(accessToken, spreadsheetId, values) {
+  const range = encodeURIComponent("A:F");
+  const url =
+    `${SHEETS_API_URL}/${encodeURIComponent(spreadsheetId)}/values/${range}:append` +
+    "?valueInputOption=RAW&insertDataOption=INSERT_ROWS";
+  let lastError;
+
+  for (let attempt = 1; attempt <= SHEET_APPEND_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({ majorDimension: "ROWS", values: [values] }),
+      });
+      const rawResult = await response.text();
+      let result = {};
+      if (rawResult) {
+        try {
+          result = JSON.parse(rawResult);
+        } catch {
+          throw new DriveUploadError("sheet-response", "Google Sheets returned non-JSON data", {
+            httpStatus: response.status,
+            responsePreview: rawResult.slice(0, 500),
+          });
+        }
+      }
+      if (response.ok) return result;
+
+      const retryable = response.status === 429 || response.status >= 500;
+      lastError = new DriveUploadError("sheet-append", "Google Sheets rejected the row append", {
+        attempt,
+        retryable,
+        httpStatus: response.status,
+        googleCode: result.error?.code,
+        googleStatus: result.error?.status,
+        googleMessage: result.error?.message,
+      });
+      if (!retryable) throw lastError;
+    } catch (error) {
+      if (error instanceof DriveUploadError && (
+        error.stage !== "sheet-append" || error.details?.retryable === false
+      )) throw error;
+      lastError = error instanceof DriveUploadError
+        ? error
+        : new DriveUploadError("sheet-network", "Google Sheets request could not be sent", {
+          attempt,
+          cause: error?.message || String(error),
+        });
+    }
+
+    if (attempt < SHEET_APPEND_ATTEMPTS) await wait(attempt * 300);
+  }
+
+  throw lastError || new DriveUploadError("sheet-append", "Unable to append the contact row");
 }
 
 async function getAccessToken(credentials) {
@@ -173,16 +255,18 @@ export async function onRequestPost(context) {
   const requestId = crypto.randomUUID();
   const rawCredentials = context.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   const folderId = String(context.env.GOOGLE_DRIVE_FOLDER_ID || "").trim();
-  if (!rawCredentials || !folderId) {
+  const spreadsheetId = String(context.env.GOOGLE_CONTACT_SHEET_ID || "").trim();
+  if (!rawCredentials || !folderId || !spreadsheetId) {
     const missing = [
       !rawCredentials ? "GOOGLE_SERVICE_ACCOUNT_JSON" : null,
       !folderId ? "GOOGLE_DRIVE_FOLDER_ID" : null,
+      !spreadsheetId ? "GOOGLE_CONTACT_SHEET_ID" : null,
     ].filter(Boolean);
     logFailure(requestId, new DriveUploadError(
       "configuration",
       `Missing Cloudflare binding(s): ${missing.join(", ")}`,
     ));
-    return json({ ok: false, error: "Google Drive is not configured", requestId }, 503);
+    return json({ ok: false, error: "Google Drive/Sheets is not configured", requestId }, 503);
   }
 
   try {
@@ -215,6 +299,7 @@ export async function onRequestPost(context) {
       });
     }
     const filename = safeFilename(payload.filename);
+    const contact = contactFromPayload(payload);
     let pngBytes;
     try {
       pngBytes = decodePng(payload.pngDataUrl);
@@ -275,7 +360,26 @@ export async function onRequestPost(context) {
       fileId: result.id,
       filename: result.name,
     });
-    return json({ ok: true, file: result, requestId });
+    const billboardLink = result.webViewLink || `https://drive.google.com/file/d/${result.id}/view`;
+    const sheetResult = await appendContactRow(accessToken, spreadsheetId, [
+      new Date().toISOString(),
+      contact.name,
+      contact.company,
+      contact.email,
+      contact.phone,
+      billboardLink,
+    ]);
+    console.log("[save-to-drive] contact row appended", {
+      requestId,
+      fileId: result.id,
+      updatedRange: sheetResult.updates?.updatedRange,
+    });
+    return json({
+      ok: true,
+      file: result,
+      sheet: { updatedRange: sheetResult.updates?.updatedRange },
+      requestId,
+    });
   } catch (error) {
     logFailure(requestId, error);
     const isInputError = ["request-json", "request-png"].includes(error?.stage);

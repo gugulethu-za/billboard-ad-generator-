@@ -31,7 +31,8 @@ public/                       Generated Pages output; ignored by Git
 - `POST /api/generate-background` uses Gemini 2.5 Flash Image to create only
   the 720x576 creative background layer. The roadside photograph, copy, domain,
   and logo are never sent to Gemini and remain deterministic browser layers.
-- `POST /api/save-to-drive` stores the generated PNG in Google Drive.
+- `POST /api/save-to-drive` stores the generated PNG in Google Drive and then
+  appends the submitted contact details and PNG link to Google Sheets.
 
 Website retrieval has a 15-second network timeout and a 16-second outer limit
 in the Python implementation. If retrieval fails, copy generation continues
@@ -48,11 +49,20 @@ repository root with:
 GOOGLE_DEVELOPER_API_KEY=your-gemini-key
 GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
 GOOGLE_DRIVE_FOLDER_ID=your-drive-folder-id
+GOOGLE_CONTACT_SHEET_ID=your-contact-spreadsheet-id
 CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
 CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=your-browser-rendering-api-token
 ```
 
 Never commit `.dev.vars`; it is ignored.
+
+Create the contact spreadsheet in the same Drive folder as the billboard PNGs.
+Its first row must contain `Timestamp`, `Naam`, `Bedrijf`, `Email`, `Telefoon`,
+and `Billboard link` in columns A-F. Enable the Google Sheets API in the service
+account's Google Cloud project and give that service account editor access to
+the spreadsheet. The existing full Google Drive OAuth scope also authorizes the
+Sheets row append, so no replacement service-account key or delegated user
+access is required.
 
 The Browser Run token needs **Account > Browser Rendering > Edit** permission,
 restricted to the Cloudflare account identified by `CLOUDFLARE_ACCOUNT_ID`.
